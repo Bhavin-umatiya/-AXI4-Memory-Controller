@@ -22,8 +22,63 @@ module top;
         #20 rst_n = 1;
     end
 
-    // Instantiate AXI Interface
-    axi_if vif(clk, rst_n);
+    // Instantiate CXL Interface
+    cxl_if cxl_vif(clk, rst_n);
+
+    // Instantiate AXI Interface (Internal bus between adapter and slave)
+    axi_if axi_vif(clk, rst_n);
+
+    // Instantiate CXL.mem to AXI4 Adapter
+    cxl_mem_adapter u_cxl_adapter (
+        .clk(clk),
+        .rst_n(rst_n),
+
+        // CXL.mem Interface
+        .cxl_valid(cxl_vif.cxl_valid),
+        .cxl_opcode(cxl_vif.cxl_opcode),
+        .cxl_addr(cxl_vif.cxl_addr),
+        .cxl_wdata(cxl_vif.cxl_wdata),
+        .cxl_ready(cxl_vif.cxl_ready),
+
+        .cxl_rsp_valid(cxl_vif.cxl_rsp_valid),
+        .cxl_rsp_rdata(cxl_vif.cxl_rsp_rdata),
+        .cxl_rsp_error(cxl_vif.cxl_rsp_error),
+
+        // AXI4 Master Interface
+        .m_awid(axi_vif.awid),
+        .m_awaddr(axi_vif.awaddr),
+        .m_awlen(axi_vif.awlen),
+        .m_awsize(axi_vif.awsize),
+        .m_awburst(axi_vif.awburst),
+        .m_awvalid(axi_vif.awvalid),
+        .m_awready(axi_vif.awready),
+
+        .m_wdata(axi_vif.wdata),
+        .m_wstrb(axi_vif.wstrb),
+        .m_wlast(axi_vif.wlast),
+        .m_wvalid(axi_vif.wvalid),
+        .m_wready(axi_vif.wready),
+
+        .m_bid(axi_vif.bid),
+        .m_bresp(axi_vif.bresp),
+        .m_bvalid(axi_vif.bvalid),
+        .m_bready(axi_vif.bready),
+
+        .m_arid(axi_vif.arid),
+        .m_araddr(axi_vif.araddr),
+        .m_arlen(axi_vif.arlen),
+        .m_arsize(axi_vif.arsize),
+        .m_arburst(axi_vif.arburst),
+        .m_arvalid(axi_vif.arvalid),
+        .m_arready(axi_vif.arready),
+
+        .m_rid(axi_vif.rid),
+        .m_rdata(axi_vif.rdata),
+        .m_rresp(axi_vif.rresp),
+        .m_rlast(axi_vif.rlast),
+        .m_rvalid(axi_vif.rvalid),
+        .m_rready(axi_vif.rready)
+    );
 
     // Instantiate AXI Slave RTL
     axi4_slave #(
@@ -31,53 +86,53 @@ module top;
         .ADDR_WIDTH(12),
         .DATA_WIDTH(32)
     ) dut (
-        .clk(vif.clk),
-        .rst_n(vif.rst_n),
+        .clk(clk),
+        .rst_n(rst_n),
 
         // Write Address Channel
-        .awid(vif.awid),
-        .awaddr(vif.awaddr),
-        .awlen(vif.awlen),
-        .awsize(vif.awsize),
-        .awburst(vif.awburst),
-        .awvalid(vif.awvalid),
-        .awready(vif.awready),
+        .awid(axi_vif.awid),
+        .awaddr(axi_vif.awaddr),
+        .awlen(axi_vif.awlen),
+        .awsize(axi_vif.awsize),
+        .awburst(axi_vif.awburst),
+        .awvalid(axi_vif.awvalid),
+        .awready(axi_vif.awready),
 
         // Write Data Channel
-        .wdata(vif.wdata),
-        .wstrb(vif.wstrb),
-        .wlast(vif.wlast),
-        .wvalid(vif.wvalid),
-        .wready(vif.wready),
+        .wdata(axi_vif.wdata),
+        .wstrb(axi_vif.wstrb),
+        .wlast(axi_vif.wlast),
+        .wvalid(axi_vif.wvalid),
+        .wready(axi_vif.wready),
 
         // Write Response Channel
-        .bid(vif.bid),
-        .bresp(vif.bresp),
-        .bvalid(vif.bvalid),
-        .bready(vif.bready),
+        .bid(axi_vif.bid),
+        .bresp(axi_vif.bresp),
+        .bvalid(axi_vif.bvalid),
+        .bready(axi_vif.bready),
 
         // Read Address Channel
-        .arid(vif.arid),
-        .araddr(vif.araddr),
-        .arlen(vif.arlen),
-        .arsize(vif.arsize),
-        .arburst(vif.arburst),
-        .arvalid(vif.arvalid),
-        .arready(vif.arready),
+        .arid(axi_vif.arid),
+        .araddr(axi_vif.araddr),
+        .arlen(axi_vif.arlen),
+        .arsize(axi_vif.arsize),
+        .arburst(axi_vif.arburst),
+        .arvalid(axi_vif.arvalid),
+        .arready(axi_vif.arready),
 
         // Read Data Channel
-        .rid(vif.rid),
-        .rdata(vif.rdata),
-        .rresp(vif.rresp),
-        .rlast(vif.rlast),
-        .rvalid(vif.rvalid),
-        .rready(vif.rready)
+        .rid(axi_vif.rid),
+        .rdata(axi_vif.rdata),
+        .rresp(axi_vif.rresp),
+        .rlast(axi_vif.rlast),
+        .rvalid(axi_vif.rvalid),
+        .rready(axi_vif.rready)
     );
 
     // Start UVM Simulation
     initial begin
-        // Pass virtual interface to configuration DB
-        uvm_config_db#(virtual axi_if)::set(null, "*", "vif", vif);
+        // Pass CXL virtual interface to configuration DB
+        uvm_config_db#(virtual cxl_if)::set(null, "*", "vif", cxl_vif);
         
         // Start test
         run_test("axi_test");

@@ -6,7 +6,7 @@ import uvm_pkg::*;
 class axi_env extends uvm_env;
     `uvm_component_utils(axi_env)
 
-    axi_agent      agent;
+    cxl_agent      agent;
     axi_scoreboard scoreboard;
 
     function new(string name = "axi_env", uvm_component parent = null);
@@ -15,7 +15,7 @@ class axi_env extends uvm_env;
 
     function void build_phase(uvm_phase phase);
         super.build_phase(phase);
-        agent      = axi_agent::type_id::create("agent", this);
+        agent      = cxl_agent::type_id::create("agent", this);
         scoreboard = axi_scoreboard::type_id::create("scoreboard", this);
     endfunction
 

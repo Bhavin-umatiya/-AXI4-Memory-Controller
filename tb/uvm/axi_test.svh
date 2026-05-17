@@ -7,7 +7,7 @@ import uvm_pkg::*;
 // SEQUENCES
 // ----------------------------------------------------
 
-class base_sequence extends uvm_sequence #(axi_item);
+class base_sequence extends uvm_sequence #(cxl_item);
     `uvm_object_utils(base_sequence)
 
     function new(string name = "base_sequence");
@@ -15,27 +15,24 @@ class base_sequence extends uvm_sequence #(axi_item);
     endfunction
 
     task body();
-        axi_item item;
-        bit [11:0] last_waddr;
-        bit [7:0]  last_wlen;
+        cxl_item item;
+        bit [11:0] last_addr;
         
-        // 1. Random Write Burst
-        item = axi_item::type_id::create("item");
+        // 1. Random Write Burst (CXL 64-byte write)
+        item = cxl_item::type_id::create("item");
         start_item(item);
-        if (!item.randomize() with { trans_type == axi_item::WRITE; delay == 0; }) 
+        if (!item.randomize() with { trans_type == cxl_item::CXL_WRITE; delay == 0; }) 
             `uvm_error("SEQ", "Randomization failed")
-        last_waddr = item.awaddr;
-        last_wlen  = item.awlen;
+        last_addr = item.addr;
         finish_item(item);
 
-        // 2. Read back from the exact same address (Corner Case check)
-        item = axi_item::type_id::create("item");
+        // 2. Read back from the exact same address (Verify parity)
+        item = cxl_item::type_id::create("item");
         start_item(item);
         if (!item.randomize() with { 
-            trans_type == axi_item::READ; 
+            trans_type == cxl_item::CXL_READ; 
             delay == 0; 
-            araddr == last_waddr; 
-            arlen == last_wlen;
+            addr == last_addr;
         }) `uvm_error("SEQ", "Randomization failed")
         finish_item(item);
     endtask
@@ -64,7 +61,7 @@ class axi_test extends uvm_test;
         seq = base_sequence::type_id::create("seq");
         
         phase.raise_objection(this);
-        `uvm_info("TEST", "Starting Test Sequence...", UVM_LOW)
+        `uvm_info("TEST", "Starting CXL Test Sequence...", UVM_LOW)
         
         // Run 50 iterations of write/read bursts to test functional coverage
         for(int i=0; i<50; i++) begin
@@ -72,7 +69,7 @@ class axi_test extends uvm_test;
         end
         
         #100ns;
-        `uvm_info("TEST", "Test Sequence Complete.", UVM_LOW)
+        `uvm_info("TEST", "CXL Test Sequence Complete.", UVM_LOW)
         phase.drop_objection(this);
     endtask
 

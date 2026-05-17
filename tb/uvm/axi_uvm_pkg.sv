@@ -5,13 +5,13 @@ package axi_uvm_pkg;
     `include "uvm_macros.svh"
     import axi_pkg::*;
 
-    // Include UVM components in correct compilation order
-    `include "axi_item.sv"
-    `include "axi_driver.sv"
-    `include "axi_monitor.sv"
-    `include "axi_agent.sv"
-    `include "axi_scoreboard.sv"
-    `include "axi_env.sv"
-    `include "axi_test.sv"
+    // Include UVM CXL components in correct compilation order
+    `include "cxl_item.svh"
+    `include "cxl_driver.svh"
+    `include "cxl_monitor.svh"
+    `include "cxl_agent.svh"
+    `include "axi_scoreboard.svh"
+    `include "axi_env.svh"
+    `include "axi_test.svh"
 
 endpackage : axi_uvm_pkg
