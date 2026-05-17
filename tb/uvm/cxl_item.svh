@@ -17,14 +17,7 @@ class cxl_item extends uvm_sequence_item;
     bit [511:0]       rdata;
     bit               error;
 
-    `uvm_object_utils_begin(cxl_item)
-        `uvm_field_enum(trans_type_t, trans_type, UVM_ALL_ON)
-        `uvm_field_int(addr, UVM_ALL_ON)
-        `uvm_field_sarray_int(wdata, UVM_ALL_ON)
-        `uvm_field_int(delay, UVM_ALL_ON)
-        `uvm_field_sarray_int(rdata, UVM_ALL_ON)
-        `uvm_field_int(error, UVM_ALL_ON)
-    `uvm_object_utils_end
+    `uvm_object_utils(cxl_item)
 
     function new(string name = "cxl_item");
         super.new(name);
