@@ -11,7 +11,7 @@ class cxl_item extends uvm_sequence_item;
     rand trans_type_t trans_type;
     rand bit [11:0]   addr;
     rand bit [511:0]  wdata;
-    rand int          delay;
+    rand bit [3:0]    delay;
 
     // Response parameters
     bit [511:0]       rdata;
