@@ -201,4 +201,55 @@ module cxl_mem_adapter (
     assign cxl_rsp_rdata = rdata_reg;
     assign cxl_rsp_error = error_reg;
 
+    // =========================================================================
+    // SYSTEMVERILOG ASSERTIONS (SVA) FOR PROTOCOL INTEGRITY
+    // =========================================================================
+
+    // 1. Reset Behavior: All valid signals must instantly deassert during reset
+    property p_reset_valid;
+        @(posedge clk) !rst_n |-> (!m_awvalid && !m_arvalid && !m_wvalid && !cxl_rsp_valid);
+    endproperty
+    assert_reset_valid: assert property (p_reset_valid)
+        else $error("SVA_RESET: Active control valid signal high during reset!");
+
+    // 2. AXI4 AWVALID Stability: AWVALID must remain high until AWREADY is high
+    property p_awvalid_stable;
+        @(posedge clk) disable iff (!rst_n)
+        (m_awvalid && !m_awready) |=> m_awvalid;
+    endproperty
+    assert_awvalid_stable: assert property (p_awvalid_stable)
+        else $error("SVA_AWVALID: m_awvalid dropped before m_awready was asserted!");
+
+    // 3. AXI4 ARVALID Stability: ARVALID must remain high until ARREADY is high
+    property p_arvalid_stable;
+        @(posedge clk) disable iff (!rst_n)
+        (m_arvalid && !m_arready) |=> m_arvalid;
+    endproperty
+    assert_arvalid_stable: assert property (p_arvalid_stable)
+        else $error("SVA_ARVALID: m_arvalid dropped before m_arready was asserted!");
+
+    // 4. AXI4 WVALID Stability: WVALID must remain high until WREADY is high
+    property p_wvalid_stable;
+        @(posedge clk) disable iff (!rst_n)
+        (m_wvalid && !m_wready) |=> m_wvalid;
+    endproperty
+    assert_wvalid_stable: assert property (p_wvalid_stable)
+        else $error("SVA_WVALID: m_wvalid dropped before m_wready was asserted!");
+
+    // 5. Beat Counter Boundary check: counter must never exceed 15 during data transfers
+    property p_counter_bound;
+        @(posedge clk) disable iff (!rst_n)
+        (state == ST_WRITE_DATA || state == ST_READ_DATA) |-> (beat_counter <= 4'd15);
+    endproperty
+    assert_counter_bound: assert property (p_counter_bound)
+        else $error("SVA_COUNTER: beat_counter exceeded maximum value of 15!");
+
+    // 6. Write Last Signal Assertion: m_wlast must be asserted on the 16th data beat
+    property p_wlast_correct;
+        @(posedge clk) disable iff (!rst_n)
+        (state == ST_WRITE_DATA && beat_counter == 4'd15) |-> m_wlast;
+    endproperty
+    assert_wlast_correct: assert property (p_wlast_correct)
+        else $error("SVA_WLAST: m_wlast was not asserted on the 16th write burst beat!");
+
 endmodule
