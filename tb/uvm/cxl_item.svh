@@ -35,6 +35,6 @@ class cxl_item extends uvm_sequence_item;
     // 2. Corner case: delay distributions
     constraint delay_c {
         delay dist { 0:/30, [1:5]:/70 };
-    end
+    }
 
 endclass : cxl_item
