@@ -140,7 +140,7 @@ module top;
 
     // Timeout watchdog
     initial begin
-        #500000; // 500us timeout
+        #1000000; // 1ms timeout to allow 1,000 full testcycles
         `uvm_fatal("TOP", "Simulation Timeout!")
     end
 
