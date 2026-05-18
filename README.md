@@ -6,6 +6,24 @@ Designed specifically for elite enterprise-level VLSI R&D roles (NVIDIA, AMD, In
 
 ---
 
+## 💡 Project Motivation & Hardware Solution
+
+### Why Should We Build This? (The Memory Wall Challenge)
+In modern high-performance computing, AI accelerator systems (like LLM training nodes) and cloud datacenters are throttled by the **"Memory Wall."** 
+* **Physical Limits**: Direct DDR memory slots on standard CPU motherboards are physically restricted by CPU package pin-count constraints. 
+* **The Bandwidth Crisis**: Adding more CPU memory directly is impossible without dramatically increasing physical space and silicon cost.
+* **The CXL Paradigm**: Compute Express Link (CXL) introduces **Type 3 Memory Expander devices** which pool massive external memory over high-speed physical PCIe lanes. This decouples memory from the CPU socket, allowing flexible, low-latency, and high-density memory scaling.
+
+### Our Project Solution (CXL-to-AXI4 Translation)
+CXL.mem communicates in ultra-wide, high-frequency **Cacheline packets (512-bit / 64-byte width)**. However, standard, cost-effective physical SRAM/DRAM chips on the expansion board communicate using the standard **AXI4 interface (32-bit width)**. 
+
+To bridge these incompatible interfaces:
+1. **Serialization Bridge**: This project implements a fully synthesizable SystemVerilog **CXL-to-AXI4 Protocol Adapter (`rtl/cxl_mem_adapter.sv`)**.
+2. **Pipelined FSM**: Our FSM serializes a single 512-bit wide CXL write request into a **16-beat incremental AXI4 burst cycle** of 32-bit beats, handling all intermediate ready/valid handshakes seamlessly.
+3. **Low-Latency Deserialization**: For reads, the adapter issues a 16-beat AXI4 read burst, aggregates the 32-bit beats back into a single 512-bit wide CXL response, and asserts protocol compliance without data corruption.
+
+---
+
 ## 🚀 Key Architectural Highlights
 
 ### 1. CXL.mem to AXI4 Protocol Adapter (`rtl/cxl_mem_adapter.sv`)
@@ -118,22 +136,3 @@ Proof of synthesizable protocol assertions firing correctly at FSM clock boundar
 ![Assertion Verification Details](assets/assertion_verification_details.png)
 
 ---
-
-## 🛠️ Real-world Debugging & Toolchain Fixes
-
-During the development and scaling of this high-bandwidth verification suite, several real-world compiler and toolchain hurdles were successfully analyzed and solved:
-
-### 1. The XSim `xelab` Option Switch Elaborator Error
-* **The Problem**: When launching behavioral simulation in Vivado, the elaborator crashed with `ERROR: [USF-XSim-62] 'elaborate' step failed` due to an invalid command-line switch `--L uvm` being appended. The dual dash (`--`) is unrecognised by XSim's command structure (which expects a single dash `-L`).
-* **The Solution**: Cleared the custom elaboration flags inside the project fileset via the Vivado Tcl Console to let Vivado auto-resolve standard UVM paths cleanly:
-  ```tcl
-  set_property -name {xsim.simulate.xsim.more_options} -value {} -objects [get_filesets sim_1]
-  set_property -name {xsim.elaborate.xelab.more_options} -value {} -objects [get_filesets sim_1]
-  set_property -name {xsim.compile.xsc.more_options} -value {} -objects [get_filesets sim_1]
-  ```
-
-### 2. The UVM Safety Watchdog Timeout
-* **The Problem**: When scaling the constrained-random sequence from 50 to 1,000 iterations to achieve functional coverage closure, the simulator threw a `UVM_FATAL: Simulation Timeout!` at cycle 909 (time `500,000 ns`). The default watchdog timer inside the UVM top wrapper (`top.sv`) was triggering too early.
-* **The Solution**: Analyzed the clock boundaries and increased the watchdog timer inside the initial block of `tb/uvm/top.sv` from `#500000` (500us) to `#1000000` (1ms), providing enough simulation headroom for all 32,000 AXI beats to complete successfully.
-
-
