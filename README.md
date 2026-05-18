@@ -98,3 +98,22 @@ UVM_FATAL :    0
 ```
 
 All 1,000 testcycles generated functional coverage hits on all address regions and transaction bins, proving the complete functional completeness and closure of the verification plan.
+
+---
+
+## 🖼️ Vivado Simulation Waveforms & Proof
+
+Below are the actual high-resolution screenshots captured directly from the AMD/Xilinx Vivado Simulator, demonstrating flawless protocol synchronization, active SVA assertions, and the full UVM validation report summary:
+
+### 1. UVM Simulation & Protocol Waveforms
+Showing the complete clock-synchronized write/read cycles driven from the virtual interface (`cxl_if`) to the SRAM core:
+![Vivado Simulation Waveform](assets/vivado_simulation_waveform.png)
+
+### 2. UVM Testbench Report Closure
+Showing 0 Warnings, 0 Errors, and 0 Fatals with all verification objections dropped successfully:
+![UVM Report Summary](assets/uvm_report_summary.png)
+
+### 3. Concurrent SystemVerilog Assertions (SVA) Details
+Proof of synthesizable protocol assertions firing correctly at FSM clock boundaries to safeguard read/write bursts:
+![Assertion Verification Details](assets/assertion_verification_details.png)
+
