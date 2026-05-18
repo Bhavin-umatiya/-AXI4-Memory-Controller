@@ -63,8 +63,8 @@ class axi_test extends uvm_test;
         phase.raise_objection(this);
         `uvm_info("TEST", "Starting CXL Test Sequence...", UVM_LOW)
         
-        // Run 50 iterations of write/read bursts to test functional coverage
-        for(int i=0; i<50; i++) begin
+        // Run 1,000 iterations (2,000 transactions / 32,000 AXI beats) to achieve deep functional coverage closure
+        for(int i=0; i<1000; i++) begin
             seq.start(env.agent.sequencer);
         end
         
