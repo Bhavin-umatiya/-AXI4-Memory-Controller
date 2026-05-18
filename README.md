@@ -117,3 +117,23 @@ Showing 0 Warnings, 0 Errors, and 0 Fatals with all verification objections drop
 Proof of synthesizable protocol assertions firing correctly at FSM clock boundaries to safeguard read/write bursts:
 ![Assertion Verification Details](assets/assertion_verification_details.png)
 
+---
+
+## 🛠️ Real-world Debugging & Toolchain Fixes
+
+During the development and scaling of this high-bandwidth verification suite, several real-world compiler and toolchain hurdles were successfully analyzed and solved:
+
+### 1. The XSim `xelab` Option Switch Elaborator Error
+* **The Problem**: When launching behavioral simulation in Vivado, the elaborator crashed with `ERROR: [USF-XSim-62] 'elaborate' step failed` due to an invalid command-line switch `--L uvm` being appended. The dual dash (`--`) is unrecognised by XSim's command structure (which expects a single dash `-L`).
+* **The Solution**: Cleared the custom elaboration flags inside the project fileset via the Vivado Tcl Console to let Vivado auto-resolve standard UVM paths cleanly:
+  ```tcl
+  set_property -name {xsim.simulate.xsim.more_options} -value {} -objects [get_filesets sim_1]
+  set_property -name {xsim.elaborate.xelab.more_options} -value {} -objects [get_filesets sim_1]
+  set_property -name {xsim.compile.xsc.more_options} -value {} -objects [get_filesets sim_1]
+  ```
+
+### 2. The UVM Safety Watchdog Timeout
+* **The Problem**: When scaling the constrained-random sequence from 50 to 1,000 iterations to achieve functional coverage closure, the simulator threw a `UVM_FATAL: Simulation Timeout!` at cycle 909 (time `500,000 ns`). The default watchdog timer inside the UVM top wrapper (`top.sv`) was triggering too early.
+* **The Solution**: Analyzed the clock boundaries and increased the watchdog timer inside the initial block of `tb/uvm/top.sv` from `#500000` (500us) to `#1000000` (1ms), providing enough simulation headroom for all 32,000 AXI beats to complete successfully.
+
+
